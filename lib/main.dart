@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:game_vault/screens/login_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+
+const supabaseUrl = 'https://ihhkcnqxgkkgsoomuzcv.supabase.co';
+const supabaseAnonKey = 'sb_publishable_-X1ODJ84_zOm2r-sustugQ_MD9lctvQ';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
+  );
+
   runApp(const MyApp());
 }
 
@@ -30,7 +43,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const LoginScreen(),
     );
   }
 }
