@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:game_vault/screens/login_screen.dart';
-import 'package:game_vault/screens/game_detail_screen.dart';
-import 'package:game_vault/services/game_service.dart';
+
 import 'package:game_vault/models/game.dart';
+import 'package:game_vault/services/game_service.dart';
+import 'package:game_vault/screens/login_screen.dart';
 import 'package:game_vault/screens/add_game_screen.dart';
+import 'package:game_vault/screens/game_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,34 +19,103 @@ class _HomeScreenState extends State<HomeScreen> {
 
   late Future<List<Game>> gamesFuture;
 
-  // ✅ FILTROS: estado actual del filtro
-  String _filterStatus = 'all';
+  // filtro actual
+  String selectedFilter = 'Todas';
 
-  // ✅ FILTROS: cache de todos los juegos
-  List<Game> _allGames = [];
+// ===============================
+//  WIDGETS DE LA UI
+// ===============================
+  Widget _buildKpiCard({
+  required String title,
+  required String value,
+  required IconData icon,
+  required Color color,
+}) {
+  return Expanded(
+    child: Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 26),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+Widget _buildKpiSection({
+  required int total,
+  required int completed,
+  required int playing,
+  required int pending,
+}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    child: Row(
+      children: [
+        _buildKpiCard(
+          title: 'Total',
+          value: total.toString(),
+          icon: Icons.videogame_asset,
+          color: Colors.blue,
+        ),
+        const SizedBox(width: 8),
+        _buildKpiCard(
+          title: 'Completados',
+          value: completed.toString(),
+          icon: Icons.check_circle,
+          color: Colors.green,
+        ),
+        const SizedBox(width: 8),
+        _buildKpiCard(
+          title: 'Jugando',
+          value: playing.toString(),
+          icon: Icons.sports_esports,
+          color: Colors.orange,
+        ),
+        const SizedBox(width: 8),
+        _buildKpiCard(
+          title: 'Pendientes',
+          value: pending.toString(),
+          icon: Icons.schedule,
+          color: Colors.grey,
+        ),
+      ],
+    ),
+  );
+}
 
   @override
   void initState() {
     super.initState();
-    // ✅ FILTROS: ahora usamos loader propio
     gamesFuture = _loadGames();
   }
 
-  // ✅ FILTROS: cargar juegos y guardarlos en memoria
   Future<List<Game>> _loadGames() async {
-    final games = await gameService.getUserGames();
-    _allGames = games;
-    return _applyFilter();
+    return await gameService.getUserGames();
   }
 
-  // ✅ FILTROS: aplicar filtro en memoria
-  List<Game> _applyFilter() {
-    if (_filterStatus == 'all') return _allGames;
-
-    return _allGames.where((g) => g.status == _filterStatus).toList();
-  }
-
-  // 🔐 Logout
+  // ===============================
+  //  LOGOUT
+  // ===============================
   Future<void> _logout() async {
     await Supabase.instance.client.auth.signOut();
 
@@ -53,67 +123,128 @@ class _HomeScreenState extends State<HomeScreen> {
 
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (_) => const LoginScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
     );
   }
 
-  // 🎨 helper texto estado
-  String _statusLabel(String status) {
-    switch (status) {
-      case 'pending':
-        return 'Pendiente';
-      case 'playing':
-        return 'Jugando';
-      case 'completed':
-        return 'Completado';
-      case 'abandoned':
-        return 'Abandonado';
-      default:
-        return status;
-    }
+  // ===============================
+  //  FILTRADO
+  // ===============================
+  List<Game> _applyFilter(List<Game> games) {
+    if (selectedFilter == 'Todas') return games;
+
+    return games.where((g) {
+      switch (selectedFilter) {
+        case 'Pendiente':
+          return g.status == 'pending';
+        case 'Jugando':
+          return g.status == 'playing';
+        case 'Completado':
+          return g.status == 'completed';
+        case 'Abandonado':
+          return g.status == 'abandoned';
+        default:
+          return true;
+      }
+    }).toList();
   }
 
-  // 🎨 helper color estado
-  Color _statusColor(String status) {
+  // ===============================
+  // CHIP DE ESTADO DEL JUEGO
+  // ===============================
+  Widget _buildStatusChip(String status) {
+    Color color;
+    String text;
+
     switch (status) {
-      case 'pending':
-        return Colors.orange;
       case 'playing':
-        return Colors.blue;
+        color = Colors.blue;
+        text = 'Jugando';
+        break;
       case 'completed':
-        return Colors.green;
+        color = Colors.green;
+        text = 'Completado';
+        break;
+      case 'pending':
+        color = Colors.orange;
+        text = 'Pendiente';
+        break;
       case 'abandoned':
-        return Colors.red;
+        color = Colors.red;
+        text = 'Abandonado';
+        break;
       default:
-        return Colors.grey;
+        color = Colors.grey;
+        text = status;
     }
-  }
 
-  // ✅ FILTROS: widget del chip
-  Widget _buildFilterChip(String value, String label) {
-    final selected = _filterStatus == value;
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) {
-          setState(() {
-            _filterStatus = value;
-          });
-        },
+    return Chip(
+      label: Text(text),
+      backgroundColor: color.withOpacity(0.15),
+      labelStyle: TextStyle(
+        color: color,
+        fontWeight: FontWeight.w600,
       ),
     );
   }
 
+  // ===============================
+  //  BARRA DE PROGRESO DE LA BIBLIOTECA
+  // ===============================
+  Widget _buildProgressSection({
+    required int total,
+    required int completed,
+  }) {
+    final percent = total == 0 ? 0.0 : completed / total;
+
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Progreso de la biblioteca',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // barra de progreso animada
+          TweenAnimationBuilder<double>(
+  tween: Tween(begin: 0, end: percent),
+  duration: const Duration(milliseconds: 800),
+  builder: (context, value, _) {
+    return LinearProgressIndicator(
+      value: value,
+      minHeight: 10,
+      borderRadius: BorderRadius.circular(10),
+    );
+  },
+),
+
+            const SizedBox(height: 8),
+
+            // texto porcentaje
+            Text(
+              '${(percent * 100).toStringAsFixed(1)}% completado',
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===============================
+  //  UI PRINCIPAL
+  // ===============================
   @override
   Widget build(BuildContext context) {
-    final user = Supabase.instance.client.auth.currentUser;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Game Vault'),
@@ -125,7 +256,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
 
-      // ➕ botón añadir
+
+      // ===============================
+      //  BOTÓN AÑADIR
+      // ===============================
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final shouldRefresh = await Navigator.push<bool>(
@@ -137,129 +271,148 @@ class _HomeScreenState extends State<HomeScreen> {
 
           if (shouldRefresh == true) {
             setState(() {
-              gamesFuture = _loadGames(); // ✅ FILTROS: recarga correcta
+              gamesFuture = _loadGames();
             });
           }
         },
         child: const Icon(Icons.add),
       ),
 
-      // ================== BODY ==================
-      body: Column(
-        children: [
-          // ✅ FILTROS: barra horizontal
-          SizedBox(
-            height: 56,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              children: [
-                _buildFilterChip('all', 'Todas'),
-                _buildFilterChip('pending', 'Pendiente'),
-                _buildFilterChip('playing', 'Jugando'),
-                _buildFilterChip('completed', 'Completado'),
-                _buildFilterChip('abandoned', 'Abandonado'),
-              ],
-            ),
-          ),
+      // ===============================
+      //  BODY
+      // ===============================
+      body: FutureBuilder<List<Game>>(
+        future: gamesFuture,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-          // ================== LISTA ==================
-          Expanded(
-            child: FutureBuilder<List<Game>>(
-              future: gamesFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState ==
-                    ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
+          final allGames = snapshot.data!;
 
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text('Error: ${snapshot.error}'),
-                  );
-                }
+final total = allGames.length;
 
-                // ✅ FILTROS: aplicamos filtro en memoria
-                final games = _applyFilter();
+final completed =
+    allGames.where((g) => g.status == 'completed').length;
 
-                if (games.isEmpty) {
-                  return const Center(
-                    child: Text('No hay juegos con este filtro'),
-                  );
-                }
+final playing =
+    allGames.where((g) => g.status == 'playing').length;
 
-                return ListView.builder(
-                  itemCount: games.length,
-                  itemBuilder: (context, index) {
-                    final game = games[index];
+final pending =
+    allGames.where((g) => g.status == 'pending').length;
+
+
+
+
+          final filteredGames = _applyFilter(allGames);
+          
+
+              allGames.where((g) => g.status == 'completed').length;
+
+          return CustomScrollView(
+            slivers: [
+
+// ===============================
+//  KPIS
+// ===============================
+              SliverToBoxAdapter(
+  child: _buildKpiSection(
+    total: total,
+    completed: completed,
+    playing: playing,
+    pending: pending,
+  ),
+),
+              // ===============================
+              //  DASHBOARD (PRO)
+              // ===============================
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: _buildProgressSection(
+                    total: total,
+                    completed: completed,
+                  ),
+                ),
+              ),
+
+              // ===============================
+              //  FILTROS
+              // ===============================
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final filter in [
+                        'Todas',
+                        'Pendiente',
+                        'Jugando',
+                        'Completado',
+                        'Abandonado',
+                      ])
+                        ChoiceChip(
+                          label: Text(filter),
+                          selected: selectedFilter == filter,
+                          onSelected: (_) {
+                            setState(() {
+                              selectedFilter = filter;
+                            });
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+              // ===============================
+              //  LISTA DE JUEGOS
+              // ===============================
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final game = filteredGames[index];
 
                     return ListTile(
-                      // 🎮 portada
-                      leading: (game.coverUrl == null)
-                          ? const Icon(Icons.videogame_asset)
-                          : ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                game.coverUrl!,
-                                width: 56,
-                                height: 56,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
-                                    const Icon(Icons.broken_image),
-                              ),
-                            ),
-
+                      leading: game.coverUrl != null
+                          ? Image.network(
+                              game.coverUrl!,
+                              width: 50,
+                              fit: BoxFit.cover,
+                            )
+                          : const Icon(Icons.videogame_asset),
                       title: Text(game.title),
-
-                      // 🎨 chip de estado + plataforma
-                      subtitle: Row(
-                        children: [
-                          Chip(
-                            label: Text(
-                              _statusLabel(game.status),
-                              style: const TextStyle(
-                                  color: Colors.white),
-                            ),
-                            backgroundColor:
-                                _statusColor(game.status),
-                            visualDensity: VisualDensity.compact,
-                            padding: EdgeInsets.zero,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child:
-                                Text(game.platform ?? '—'),
-                          ),
-                        ],
-                      ),
-
-                      // 🔍 ir a detalle
+                      subtitle: Text(game.platform ?? '—'),
+                      trailing: _buildStatusChip(game.status),
                       onTap: () async {
                         final shouldRefresh =
                             await Navigator.push<bool>(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                                GameDetailScreen(game: game),
+                            builder: (_) => GameDetailScreen(game: game),
                           ),
                         );
 
                         if (shouldRefresh == true) {
                           setState(() {
-                            gamesFuture = _loadGames(); // ✅ FILTROS
+                            gamesFuture = _loadGames();
                           });
                         }
                       },
                     );
                   },
-                );
-              },
-            ),
-          ),
-        ],
+                  childCount: filteredGames.length,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
+
+    
   }
 }

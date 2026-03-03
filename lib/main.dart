@@ -9,6 +9,7 @@ const supabaseAnonKey = 'sb_publishable_-X1ODJ84_zOm2r-sustugQ_MD9lctvQ';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+
   await Supabase.initialize(
     url: supabaseUrl,
     anonKey: supabaseAnonKey,

@@ -1,0 +1,20 @@
+
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    {
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Game Vault (Dev)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "toolArgs": [
+        "--dart-define=SUPABASE_URL=https://ihhkcnqxgkkgsoomuzcv.supabase.co",
+        "--dart-define=SUPABASE_ANON_KEY=sb_publishable_-X1ODJ84_zOm2r-sustugQ_MD9lctvQ",
+        "--dart-define=RAWG_KEY=ced82e3d1c4744ca87e1d358e4549dd8"
+      ]
+    }
+  ]
+}
