@@ -247,7 +247,7 @@ Widget _buildKpiSection({
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Game Vault'),
+        title: const Text('Game Vault 🏆'),
         actions: [
           IconButton(
             onPressed: _logout,
@@ -301,11 +301,58 @@ final playing =
 final pending =
     allGames.where((g) => g.status == 'pending').length;
 
+    final filteredGames = _applyFilter(allGames);
 
+if (filteredGames.isEmpty) {
+  return CustomScrollView(
+    slivers: [
 
+      SliverToBoxAdapter(
+        child: _buildKpiSection(
+          total: total,
+          completed: completed,
+          playing: playing,
+          pending: pending,
+        ),
+      ),
 
-          final filteredGames = _applyFilter(allGames);
-          
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: const [
+              SizedBox(height: 60),
+
+              Icon(
+                Icons.videogame_asset_off,
+                size: 60,
+                color: Colors.grey,
+              ),
+
+              SizedBox(height: 16),
+
+              Text(
+                "Tu biblioteca está vacía",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              SizedBox(height: 8),
+
+              Text(
+                "Pulsa + para añadir tu primer juego",
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+
+    ],
+  );
+}
 
               allGames.where((g) => g.status == 'completed').length;
 

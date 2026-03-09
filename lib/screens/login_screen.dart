@@ -11,8 +11,12 @@ class LoginScreen extends StatefulWidget{
 }
 
 class _LoginScreenState extends State<LoginScreen>{
+
+  final _formKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+ 
+
 
 @override
 void dispose(){
@@ -68,6 +72,76 @@ Future <void> _login() async {
 
 @override
 Widget build(BuildContext context){
+
+  // FORMULARIO DE LOGIN VALIDADO
+
+  Form(
+  key: _formKey,
+  child: Column(
+    children: [
+
+      // EMAIL
+      TextFormField(
+        controller: emailController,
+        decoration: const InputDecoration(
+          labelText: 'Email',
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Introduce tu email';
+          }
+
+          final emailRegex =
+              RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$');
+
+          if (!emailRegex.hasMatch(value)) {
+            return 'Email no válido';
+          }
+
+          return null;
+        },
+      ),
+
+      const SizedBox(height: 16),
+
+      // PASSWORD 
+
+      TextFormField(
+        controller: passwordController,
+        obscureText: true,
+        decoration: const InputDecoration(
+          labelText: 'Contraseña',
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Introduce tu contraseña';
+          }
+
+          if (value.length < 6) {
+            return 'Mínimo 6 caracteres';
+          }
+
+          return null;
+        },
+      ),
+
+      
+
+      const SizedBox(height: 20),
+
+      ElevatedButton(
+        onPressed: () {
+          if (_formKey.currentState!.validate()) {
+            _login();
+          }
+        },
+        child: const Text("Iniciar sesión"),
+      ),
+    ],
+  ),
+);
+
+
   return Scaffold(
     appBar: AppBar(
       title: const Text('Game Vault Login'),

@@ -119,19 +119,21 @@ class _AddGameScreenState extends State<AddGameScreen> {
             children: [
 
 
-              //  Título
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Título *',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  final v = value?.trim() ?? '';
-                  if (v.isEmpty) return 'El título es obligatorio';
-                  return null;
-                },
-              ),
+              
+// TÍTULO
+TextFormField(
+  controller: _titleController,
+  decoration: const InputDecoration(
+    labelText: 'Título del juego',
+  ),
+  validator: (value) {
+    if (value == null || value.isEmpty) {
+      return 'Introduce el título';
+    }
+    return null;
+  },
+),
+
               const SizedBox(height: 12),
 
               //  RAWG botón para buscar 
@@ -237,14 +239,22 @@ class _AddGameScreenState extends State<AddGameScreen> {
               ElevatedButton.icon(
                 onPressed: _isLoading ? null : _save,
                 icon: _isLoading
+
+                
                     ? const SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
+                      
+                      
+                      
                       )
                     : const Icon(Icons.save),
                 label: Text(_isLoading ? 'Guardando...' : 'Guardar'),
+                
               ),
+              
+              
             ],
           ),
         ),
